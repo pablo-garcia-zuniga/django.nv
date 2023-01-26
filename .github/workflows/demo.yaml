@@ -1,0 +1,39 @@
+name: Django                                  # workflow name
+on:
+  push:
+    branches:                                 # similar to "only" in GitLab
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest                    # similar to "image" in GitLab
+    steps:
+      - run: echo "This is a build step"      # similar to "script" in GitLab
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps: 
+      - run: echo "This is a test step"
+  integration:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - run: echo "This is an integration step"
+      - run: exit 1
+  
+  artifact:
+    runs-on: ubuntu-latest
+    needs: [build, test, integration]
+    steps: 
+      - name: Create data to be saved
+        run: echo "hello" > hello.txt
+      - name: Upload artifact static content 
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: hello.txt
+  prod:
+    runs-on: ubuntu-latest
+    needs: [build, test, artifact, integration]
+    steps:
+      - run: echo "This is a deploy step"
